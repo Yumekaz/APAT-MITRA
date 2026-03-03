@@ -1,0 +1,34 @@
+{
+    "title": "Bleeding Control Protocol",
+    "subtitle": "NDMA certified · Red Cross verified",
+    "tag": "Deep Laceration · Bleeding",
+    "steps": [
+        {
+            "title": "Call for help",
+            "desc": "Alert nearby people and bystanders immediately."
+        },
+        {
+            "title": "Apply firm pressure",
+            "desc": "Press clean cloth directly on wound. Do not remove cloth once applied."
+        },
+        {
+            "title": "Elevate the limb",
+            "desc": "Raise the injured limb above heart level to slow bleeding."
+        },
+        {
+            "title": "Monitor breathing",
+            "desc": "Check victim's breathing every 2 minutes."
+        },
+        {
+            "title": "Wait for help",
+            "desc": "Keep the patient calm and still. Do not move them unless unsafe."
+        }
+    ],
+    "voice_lines": [
+        "\"Alert nearby people immediately...\"",
+        "\"Press clean cloth on wound firmly...\"",
+        "\"Raise the limb above heart level...\"",
+        "\"Check breathing every 2 minutes...\"",
+        "\"Keep the patient calm and still...\""
+    ]
+}

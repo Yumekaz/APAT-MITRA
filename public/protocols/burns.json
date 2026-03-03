@@ -1,0 +1,34 @@
+{
+    "title": "Burn Protocol",
+    "subtitle": "NDMA guidelines",
+    "tag": "Thermal Burn",
+    "steps": [
+        {
+            "title": "Cool the burn",
+            "desc": "Hold under cool (not cold) running water for 10-15 minutes."
+        },
+        {
+            "title": "Remove tight items",
+            "desc": "Remove rings or other tight items from the burned area."
+        },
+        {
+            "title": "Don't break blisters",
+            "desc": "Fluid-filled blisters protect against infection."
+        },
+        {
+            "title": "Apply lotion",
+            "desc": "Once a burn is completely cooled, apply aloe vera or burn gel."
+        },
+        {
+            "title": "Bandage loosely",
+            "desc": "Cover the burn with a sterile gauze bandage."
+        }
+    ],
+    "voice_lines": [
+        "\"Hold area under cool water...\"",
+        "\"Remove any tight jewelry...\"",
+        "\"Do not pop any blisters...\"",
+        "\"Apply a soothing gel...\"",
+        "\"Cover loosely with sterile bandage...\""
+    ]
+}
