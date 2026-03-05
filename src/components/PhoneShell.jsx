@@ -12,6 +12,12 @@ const SCREENS = ['home', 'camera', 'protocol', 'sos']
 export default function PhoneShell() {
   const { screen, history } = useApp()
   const [time, setTime] = useState('')
+  const [theme, setTheme] = useState(() => {
+    if (typeof window === 'undefined') return 'light'
+    const saved = window.localStorage.getItem('theme')
+    if (saved === 'light' || saved === 'dark') return saved
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  })
 
   // Live clock
   useEffect(() => {
@@ -25,6 +31,11 @@ export default function PhoneShell() {
     const id = setInterval(tick, 10000)
     return () => clearInterval(id)
   }, [])
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme)
+    window.localStorage.setItem('theme', theme)
+  }, [theme])
 
   // Determine CSS class for each screen
   const getScreenClass = (id) => {
@@ -51,6 +62,13 @@ export default function PhoneShell() {
       <div className="status-bar">
         <span className="status-time">{time}</span>
         <div className="status-icons">
+          <button
+            className="theme-toggle"
+            aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+            onClick={() => setTheme(prev => (prev === 'dark' ? 'light' : 'dark'))}
+          >
+            {theme === 'dark' ? '☀️' : '🌙'}
+          </button>
           <div className="signal-bars">
             <div className="signal-bar" />
             <div className="signal-bar" />
