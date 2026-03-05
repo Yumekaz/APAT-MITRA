@@ -39,7 +39,7 @@ Apat-Mitra is a PWA that:
 
 | Home                               | AI Triage                              | Voice Protocol                             | SOS                              |
 | ---------------------------------- | -------------------------------------- | ------------------------------------------ | -------------------------------- |
-| ![Home](docs/screenshots/home.png) | ![Camera](docs/screenshots/camera.png) | ![Protocol](docs/screenshots/protocol.png) | ![SOS](docs/screenshots/sos.png) |
+| ![Home](docs/screenshots/home.png) | ![AI Triage](docs/screenshots/ai-triage.png) | ![Voice Protocol](docs/screenshots/voice-protocol.png) | ![SOS](docs/screenshots/sos.png) |
 
 ---
 
@@ -138,15 +138,15 @@ npm run dev
 
 ---
 
-## Hackathon Sprint Goals
+## Future Development Roadmap
 
-Building during Graph-E-Thon 3.0 (72-hour finals):
+Planned enhancements beyond the current prototype:
 
-- [ ] Gemini 2.5 Flash Vision API integration + confidence gate
-- [ ] Real SpeechSynthesis voice protocol (Hindi + English)
-- [ ] GPS fetch + real SMS to 112 on Android device
-- [ ] Full offline test on budget ₹6,000 Android phone
-- [ ] Cloudflare Worker proxy for API key protection
+- Gemini 2.5 Flash Vision API integration with confidence gate fallback
+- Real-time SpeechSynthesis voice protocol in Hindi + English
+- Live GPS fetch + direct SMS dispatch to 112 on Android
+- Full offline validation on budget ₹6,000 Android hardware
+- Cloudflare Worker proxy for secure API key management
 
 ---
 
