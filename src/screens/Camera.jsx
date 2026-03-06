@@ -1,75 +1,184 @@
-import { useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useApp } from '../context/AppContext'
 import './Camera.css'
 
-export default function Camera() {
-  const { navigateTo, navigateBack, showToast, cameraState, setCameraState } = useApp()
+const PROTOCOL_OPTIONS = [
+  { id: 'bleeding', label: 'Bleeding' },
+  { id: 'burns', label: 'Burn' },
+  { id: 'fracture', label: 'Fracture' },
+  { id: 'cpr', label: 'CPR' },
+]
 
-  // Reset camera state every time screen becomes active
+const PROTOCOL_LABELS = {
+  bleeding: 'Deep Laceration · Bleeding',
+  burns: 'Thermal Burn',
+  fracture: 'Suspected Fracture · Bone Injury',
+  cpr: 'Possible Cardiac Arrest',
+}
+
+export default function Camera() {
+  const {
+    screen,
+    navigateTo,
+    navigateBack,
+    showToast,
+    cameraState,
+    setCameraState,
+    selectedProtocolId,
+    selectProtocol,
+    triageResult,
+  } = useApp()
+  const [selectedFile, setSelectedFile] = useState(null)
+  const [previewUrl, setPreviewUrl] = useState('')
+  const [manualProtocolId, setManualProtocolId] = useState(selectedProtocolId)
+  const inputRef = useRef(null)
+
   useEffect(() => {
+    if (screen === 'camera') {
+      setCameraState('idle')
+    }
+  }, [screen, setCameraState])
+
+  useEffect(() => {
+    setManualProtocolId(selectedProtocolId)
+  }, [selectedProtocolId])
+
+  useEffect(() => {
+    if (!selectedFile) {
+      setPreviewUrl('')
+      return undefined
+    }
+
+    const objectUrl = URL.createObjectURL(selectedFile)
+    setPreviewUrl(objectUrl)
+
+    return () => URL.revokeObjectURL(objectUrl)
+  }, [selectedFile])
+
+  function handleFileChange(event) {
+    const file = event.target.files?.[0]
+    if (!file) return
+    setSelectedFile(file)
     setCameraState('idle')
-  }, [])
+  }
+
+  function inferProtocolId(fileName) {
+    const name = fileName.toLowerCase()
+    if (name.includes('burn')) return 'burns'
+    if (name.includes('fracture') || name.includes('bone')) return 'fracture'
+    if (name.includes('cpr') || name.includes('collapse') || name.includes('drown')) return 'cpr'
+    if (name.includes('bleed') || name.includes('cut') || name.includes('wound')) return 'bleeding'
+    return manualProtocolId || 'bleeding'
+  }
+
+  function buildSummary(protocolId, source) {
+    const summaries = {
+      bleeding: 'Possible open wound with bleeding. Start direct pressure and monitor breathing.',
+      burns: 'Possible burn injury. Cool the area with clean running water and protect the skin.',
+      fracture: 'Possible fracture or crush injury. Keep the patient still and immobilize the limb.',
+      cpr: 'Possible collapse or unresponsive patient. Call for help and begin CPR if needed.',
+    }
+
+    return `${summaries[protocolId]} ${source === 'manual' ? 'Protocol selected manually.' : 'Prototype routing used local rules.'}`
+  }
+
+  function applyProtocol(protocolId, source, confidence) {
+    selectProtocol(protocolId, {
+      injuryLabel: PROTOCOL_LABELS[protocolId],
+      confidence,
+      source,
+      summary: buildSummary(protocolId, source),
+      immediateWarning: protocolId === 'fracture' ? 'Do not move the injured limb.' : '',
+    })
+  }
 
   function handleCapture() {
     if (cameraState === 'analyzing') return
+    if (!selectedFile && !manualProtocolId) {
+      showToast('Capture or upload a photo first')
+      return
+    }
+
     setCameraState('analyzing')
-    setTimeout(() => setCameraState('result'), 2400)
+
+    window.setTimeout(() => {
+      const protocolId = selectedFile ? inferProtocolId(selectedFile.name) : manualProtocolId
+      const source = selectedFile ? 'prototype' : 'manual'
+      const confidence = selectedFile ? 0.78 : 0.95
+      applyProtocol(protocolId, source, confidence)
+      setCameraState('result')
+    }, 1600)
   }
+
+  const overlayClass = cameraState === 'result' ? 'ai-overlay ai-overlay-result' : 'ai-overlay ai-overlay-top'
 
   return (
     <div className="camera-screen">
+      <input
+        ref={inputRef}
+        className="camera-input"
+        type="file"
+        accept="image/*"
+        capture="environment"
+        onChange={handleFileChange}
+      />
 
-      {/* Dark viewfinder area */}
       <div className="viewfinder">
         <div className="cam-grain" />
+        {previewUrl ? (
+          <img className="camera-preview" src={previewUrl} alt="Selected injury preview" />
+        ) : (
+          <div className="wound-blob" />
+        )}
 
-        {/* Glowing wound area mock */}
-        <div className="wound-blob" />
-
-        {/* Corner scan frame */}
         <div className="scan-frame">
-          {['tl','tr','bl','br'].map(c => <div key={c} className={`corner ${c}`} />)}
+          {['tl', 'tr', 'bl', 'br'].map(corner => <div key={corner} className={`corner ${corner}`} />)}
           <div className="scan-line" />
         </div>
 
-        {/* Top bar */}
         <div className="cam-top-bar">
-          <button className="cam-back-btn" onClick={navigateBack}>←</button>
-          <span className="cam-title">AI TRIAGE</span>
-          <div style={{ display:'flex', gap:8, alignItems:'center' }}>
-            <div className="offline-badge" style={{ fontSize:10 }}>
-              <OfflineIcon />
+          <div className="cam-top-left">
+            <button className="cam-back-btn" onClick={navigateBack}>←</button>
+            <div className="cam-title-wrap">
+              <span className="cam-kicker">AI Assisted</span>
+              <span className="cam-title">Triage</span>
             </div>
-            <div className="cam-mode-badge">LIVE</div>
+          </div>
+          <div className="cam-top-right">
+            <div className="offline-badge cam-offline-badge">
+              <OfflineIcon />
+              Gemini Proto
+            </div>
+            <div className="cam-mode-badge">PHOTO</div>
           </div>
         </div>
 
-        {/* AI Overlay */}
-        <div className="ai-overlay">
+        <div className={overlayClass}>
           {cameraState === 'idle' && (
-            <div className="ai-hint">Point camera at the wound</div>
+            <div className="ai-hint">
+              {selectedFile ? `Ready to analyze ${selectedFile.name}` : 'Capture or upload an injury photo'}
+            </div>
           )}
           {cameraState === 'analyzing' && (
             <div className="ai-analyzing-box">
               <div className="ai-spinner" />
-              <span className="ai-text">Gemini analyzing injury...</span>
+              <span className="ai-text">Analyzing with Gemini-style prototype routing...</span>
             </div>
           )}
           {cameraState === 'result' && (
             <div className="ai-result-box">
               <div className="result-top">
-                <span className="result-title">Deep Laceration</span>
-                <span className="confidence-badge">85% Confidence</span>
+                <span className="result-title">{triageResult.injuryLabel}</span>
+                <span className="confidence-badge">{Math.round(triageResult.confidence * 100)}% Confidence</span>
               </div>
-              <p className="result-desc">
-                AI suggests bleeding control protocol. If incorrect, please override.
-              </p>
+              <p className="result-desc">{triageResult.summary}</p>
+              <p className="result-meta">Source: {selectedFile ? 'Photo-assisted prototype' : 'Manual selection'}</p>
               <div className="result-actions">
-                <button className="res-btn" onClick={() => showToast('Override — backend coming soon')}>
-                  Override
+                <button className="res-btn" onClick={() => setCameraState('idle')}>
+                  Re-check
                 </button>
                 <button className="res-btn confirm" onClick={() => navigateTo('protocol')}>
-                  Proceed →
+                  Open Protocol →
                 </button>
               </div>
             </div>
@@ -77,21 +186,38 @@ export default function Camera() {
         </div>
       </div>
 
-      {/* Bottom controls */}
       <div className="cam-bottom">
         <p className="cam-instruction">
-          <strong>Point camera at the wound.</strong><br />
-          Hold steady for 2 seconds
+          <strong>Use a live photo on mobile or upload a sample image.</strong><br />
+          Select a protocol if you want to override the classification.
         </p>
+        <div className="protocol-picker">
+          {PROTOCOL_OPTIONS.map(option => (
+            <button
+              key={option.id}
+              className={`protocol-chip ${manualProtocolId === option.id ? 'active' : ''}`}
+              onClick={() => setManualProtocolId(option.id)}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
         <div className="capture-row">
-          <button className="side-btn" onClick={() => showToast('Flashlight — hardware required')}>🔦</button>
+          <button className="side-btn" onClick={() => inputRef.current?.click()}>🖼️</button>
           <button className="capture-btn" onClick={handleCapture}>
             {cameraState === 'analyzing' ? <div className="cap-spinner" /> : '📷'}
           </button>
-          <button className="side-btn" onClick={() => showToast('Gallery — coming soon')}>↩</button>
+          <button
+            className="side-btn"
+            onClick={() => {
+              applyProtocol(manualProtocolId, 'manual', 0.95)
+              navigateTo('protocol')
+            }}
+          >
+            📋
+          </button>
         </div>
       </div>
-
     </div>
   )
 }

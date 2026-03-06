@@ -1,15 +1,15 @@
 {
-    "short_name": "Apat-Mitra",
-    "name": "Apat-Mitra Emergency First Aid App",
-    "icons": [
-        {
-            "src": "/vite.svg",
-            "type": "image/svg+xml",
-            "sizes": "512x512"
-        }
-    ],
-    "start_url": ".",
-    "display": "standalone",
-    "theme_color": "#0B3D91",
-    "background_color": "#F7F9FC"
+  "short_name": "Apat-Mitra",
+  "name": "Apat-Mitra Emergency First Aid Prototype",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#0B3D91",
+  "background_color": "#F7F9FC"
 }

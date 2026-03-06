@@ -136,7 +136,7 @@ body {
 
 /* ===== STATUS BAR ===== */
 .status-bar {
-  padding: 58px 26px 6px;
+  padding: 38px 26px 12px;
   display: flex;
   justify-content: space-between;
   align-items: center;

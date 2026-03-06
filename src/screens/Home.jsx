@@ -3,22 +3,28 @@ import { useApp } from '../context/AppContext'
 import './Home.css'
 
 export default function Home() {
-  const { navigateTo, showToast } = useApp()
+  const { navigateTo, showToast, selectProtocol } = useApp()
   const [lang, setLang] = useState('HI')
+
+  function openProtocol(protocolId) {
+    selectProtocol(protocolId, {
+      source: 'manual',
+      confidence: 0.95,
+      summary: 'Manual protocol selected from the home screen.',
+    })
+    navigateTo('protocol')
+  }
 
   return (
     <div className="home">
-
-      {/* Header */}
       <div className="home-header">
         <div className="home-brand">आपत्<span>·</span>Mitra</div>
         <div className="offline-badge">
           <div className="offline-dot" />
-          Offline
+          Prototype
         </div>
       </div>
 
-      {/* Hero CTA */}
       <div className="home-hero">
         <button className="emergency-btn" onClick={() => navigateTo('camera')}>
           <svg xmlns="http://www.w3.org/2000/svg" width="52" height="52" viewBox="0 0 24 24" fill="white">
@@ -26,63 +32,54 @@ export default function Home() {
           </svg>
           <span className="btn-label">START</span>
         </button>
-        <p className="home-tagline">Tap to begin emergency<br />first aid guidance</p>
+        <p className="home-tagline">Capture a photo, choose a protocol,<br />and hear the next first-aid step</p>
       </div>
 
-      {/* Quick Actions Grid */}
       <div className="quick-actions">
-        {QUICK_ACTIONS.map(({ icon, label, sub, action }) => (
-          <div
-            key={label}
-            className="quick-action"
-            onClick={() => action ? navigateTo(action) : showToast(`${label} — backend coming soon`)}
-          >
+        {QUICK_ACTIONS.map(({ icon, label, sub, onPress }) => (
+          <button key={label} className="quick-action" onClick={() => onPress({ navigateTo, showToast, openProtocol })}>
             <span className="qa-icon">{icon}</span>
             <span className="qa-label">{label}</span>
             <span className="qa-sub">{sub}</span>
-          </div>
+          </button>
         ))}
       </div>
 
-      {/* Footer */}
       <div className="home-footer">
         <div className="acc-row">
-          <button className="acc-btn" onClick={() => showToast('Language — coming soon')}>
+          <button className="acc-btn" onClick={() => showToast('Voice guidance follows the phone language when available')}>
             <GlobeIcon />
           </button>
-          <button className="acc-btn" onClick={() => showToast('Text size — coming soon')}>
+          <button className="acc-btn" onClick={() => showToast('Large-text mode is still a planned improvement')}>
             <TextIcon />
           </button>
         </div>
         <div className="lang-toggle">
-          {['HI', 'EN'].map(l => (
+          {['HI', 'EN'].map(code => (
             <button
-              key={l}
-              className={`lang-btn ${lang === l ? 'active' : ''}`}
+              key={code}
+              className={`lang-btn ${lang === code ? 'active' : ''}`}
               onClick={() => {
-                setLang(l)
-                showToast(l === 'HI' ? 'हिंदी चुनी गई' : 'English selected')
+                setLang(code)
+                showToast(code === 'HI' ? 'हिंदी मोड चुना गया' : 'English mode selected')
               }}
             >
-              {l}
+              {code}
             </button>
           ))}
         </div>
       </div>
-
     </div>
   )
 }
 
-// ---- Data ----
 const QUICK_ACTIONS = [
-  { icon: '📷', label: 'Scan Injury', sub: 'AI triage',        action: 'camera'   },
-  { icon: '📋', label: 'Protocols',   sub: 'First aid guides', action: 'protocol' },
-  { icon: '🆘', label: 'SOS · 112',  sub: 'GPS + injury',     action: 'sos'      },
-  { icon: '🗣️', label: 'Voice',       sub: 'Hindi / EN',       action: null       },
+  { icon: '📷', label: 'Scan Injury', sub: 'Photo-assisted triage', onPress: ({ navigateTo }) => navigateTo('camera') },
+  { icon: '🩸', label: 'Bleeding', sub: 'Direct pressure protocol', onPress: ({ openProtocol }) => openProtocol('bleeding') },
+  { icon: '🔥', label: 'Burns', sub: 'Cool and cover', onPress: ({ openProtocol }) => openProtocol('burns') },
+  { icon: '🆘', label: 'SOS · 112', sub: 'Compose emergency SMS', onPress: ({ navigateTo }) => navigateTo('sos') },
 ]
 
-// ---- Inline SVG icons ----
 function GlobeIcon() {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
@@ -92,6 +89,7 @@ function GlobeIcon() {
     </svg>
   )
 }
+
 function TextIcon() {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"

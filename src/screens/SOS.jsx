@@ -1,41 +1,89 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useApp } from '../context/AppContext'
 import './SOS.css'
 
 export default function SOS() {
-  const { navigateBack, showToast } = useApp()
-  const [elapsed, setElapsed] = useState(134) // seconds
+  const { navigateBack, showToast, currentStep, selectedProtocol, triageResult, location, setLocation } = useApp()
+  const [elapsed, setElapsed] = useState(0)
 
-  // Live elapsed timer
   useEffect(() => {
-    const id = setInterval(() => setElapsed(s => s + 1), 1000)
+    const id = setInterval(() => setElapsed(seconds => seconds + 1), 1000)
     return () => clearInterval(id)
   }, [])
 
+  useEffect(() => {
+    if (!('geolocation' in navigator) || location.status !== 'idle') {
+      return
+    }
+
+    setLocation(prev => ({ ...prev, status: 'loading', error: '' }))
+    navigator.geolocation.getCurrentPosition(
+      position => {
+        setLocation({
+          status: 'ready',
+          coords: {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          },
+          updatedAt: Date.now(),
+          error: '',
+        })
+      },
+      error => {
+        setLocation({
+          status: 'error',
+          coords: null,
+          updatedAt: null,
+          error: error.message || 'Location unavailable',
+        })
+      },
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
+    )
+  }, [location.status, setLocation])
+
   const mins = String(Math.floor(elapsed / 60)).padStart(2, '0')
   const secs = String(elapsed % 60).padStart(2, '0')
+  const coordsText = location.coords
+    ? `Lat: ${location.coords.latitude.toFixed(5)} · Long: ${location.coords.longitude.toFixed(5)}`
+    : location.status === 'loading'
+      ? 'Fetching location...'
+      : 'Location unavailable'
+
+  const message = useMemo(() => {
+    const parts = [
+      'Apat-Mitra emergency alert.',
+      `Injury: ${triageResult.injuryLabel}.`,
+      `Protocol: ${selectedProtocol.title}, step ${Math.min(currentStep + 1, selectedProtocol.steps.length)}/${selectedProtocol.steps.length}.`,
+      triageResult.summary,
+    ]
+
+    if (location.coords) {
+      parts.push(`Location: ${location.coords.latitude.toFixed(5)}, ${location.coords.longitude.toFixed(5)}.`)
+    } else if (location.error) {
+      parts.push(`Location unavailable: ${location.error}.`)
+    }
+
+    return parts.join(' ')
+  }, [currentStep, location.coords, location.error, selectedProtocol.steps.length, selectedProtocol.title, triageResult.injuryLabel, triageResult.summary])
 
   function handleSend() {
-    showToast('SOS sent! Help is on the way 🚑')
-    setTimeout(navigateBack, 1800)
+    const href = `sms:112?body=${encodeURIComponent(message)}`
+    window.location.href = href
+    showToast('Opened SMS composer with the emergency message')
   }
 
   return (
     <div className="sos-screen">
-
-      {/* Back */}
       <button className="back-nav" onClick={navigateBack}>
         <ChevronLeft /> Back
       </button>
 
-      {/* Header */}
       <div className="sos-header">
         <div className="sos-tag">SOS · Emergency</div>
         <h1 className="sos-title">Send Alert to 112</h1>
-        <p className="sos-subtitle">Auto-composed with AI injury summary</p>
+        <p className="sos-subtitle">Uses live geolocation when your browser allows it</p>
       </div>
 
-      {/* SMS Preview card */}
       <div className="sms-card">
         <div className="sms-card-header">
           <div className="sms-icon">📱</div>
@@ -43,44 +91,38 @@ export default function SOS() {
             <div className="sms-to-label">Sending to</div>
             <div className="sms-to-number">112</div>
           </div>
-          <div className="sms-auto-badge">AUTO</div>
+          <div className="sms-auto-badge">SMS</div>
         </div>
         <div className="sms-body">
-          <Field label="Message">
-            Apat-Mitra Alert: <strong>Deep laceration with active bleeding</strong> detected. Immediate help needed.
-          </Field>
+          <Field label="Message">{message}</Field>
           <Field label="GPS Location">
-            <span className="coords">Lat: 30.3165° N · Long: 78.0322° E</span>
+            <span className="coords">{coordsText}</span>
           </Field>
           <Field label="Protocol Status">
-            Bleeding Control Step 2/5 — In progress
+            {selectedProtocol.title} · Step {Math.min(currentStep + 1, selectedProtocol.steps.length)}/{selectedProtocol.steps.length}
           </Field>
         </div>
       </div>
 
-      {/* Info grid */}
       <div className="sos-info-grid">
-        <InfoCard label="Injury Type"   value="Laceration"  valueClass="danger" />
-        <InfoCard label="GPS Lock"      value="✓ Active"    valueClass="good"   />
-        <InfoCard label="Network"       value="SMS Only"    valueClass="amber"  />
-        <InfoCard label="Time Elapsed"  value={`${mins}:${secs}`} />
+        <InfoCard label="Injury Type" value={triageResult.protocolId.toUpperCase()} valueClass="danger" />
+        <InfoCard label="GPS Lock" value={location.status === 'ready' ? 'Active' : location.status === 'loading' ? 'Searching' : 'Unavailable'} valueClass={location.status === 'ready' ? 'good' : 'amber'} />
+        <InfoCard label="Network" value="SMS Composer" valueClass="amber" />
+        <InfoCard label="Time Elapsed" value={`${mins}:${secs}`} />
       </div>
 
-      {/* CTA */}
       <div className="sos-cta">
         <button className="sos-send-btn" onClick={handleSend}>
-          📤 Send SOS Now
+          📤 Open SMS Composer
         </button>
         <button className="sos-cancel" onClick={navigateBack}>
-          Cancel and return to protocol
+          Return to protocol
         </button>
       </div>
-
     </div>
   )
 }
 
-// ---- Small reusable pieces ----
 function Field({ label, children }) {
   return (
     <div className="sms-field">

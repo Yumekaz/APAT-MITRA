@@ -1,52 +1,129 @@
+import { useEffect, useMemo, useState } from 'react'
 import { useApp } from '../context/AppContext'
 import './Protocol.css'
 
-const STEPS = [
-  { title: 'Call for help',       desc: 'Alert nearby people and bystanders immediately.' },
-  { title: 'Apply firm pressure', desc: 'Press clean cloth directly on wound. Do not remove cloth once applied.' },
-  { title: 'Elevate the limb',    desc: 'Raise the injured limb above heart level to slow bleeding.' },
-  { title: 'Monitor breathing',   desc: "Check victim's breathing every 2 minutes." },
-  { title: 'Wait for help',       desc: 'Keep the patient calm and still. Do not move them unless unsafe.' },
-]
-
-const VOICE_LINES = [
-  '"Alert nearby people immediately..."',
-  '"Press clean cloth on wound firmly..."',
-  '"Raise the limb above heart level..."',
-  '"Check breathing every 2 minutes..."',
-  '"Keep the patient calm and still..."',
-]
-
 export default function Protocol() {
-  const { navigateTo, navigateBack, showToast, currentStep, setCurrentStep } = useApp()
+  const {
+    navigateTo,
+    navigateBack,
+    showToast,
+    currentStep,
+    setCurrentStep,
+    selectedProtocol,
+    triageResult,
+    screen,
+  } = useApp()
+  const [isSpeaking, setIsSpeaking] = useState(false)
 
-  const total   = STEPS.length
-  const percent = Math.round((currentStep / total) * 100)
-  const isLast  = currentStep === total - 1
-  const isFirst = currentStep === 0
+  const steps = selectedProtocol.steps ?? []
+  const voiceLines = selectedProtocol.voice_lines ?? []
+  const total = steps.length
+  const safeStep = Math.min(currentStep, Math.max(total - 1, 0))
+  const percent = total <= 1 ? (total === 0 ? 0 : 100) : Math.round((safeStep / (total - 1)) * 100)
+  const isLast = safeStep === total - 1
+  const isFirst = safeStep === 0
+  const currentVoiceLine = voiceLines[safeStep] ?? steps[safeStep]?.desc ?? 'Follow the protocol carefully.'
 
-  function next() { if (!isLast)  setCurrentStep(s => s + 1) }
-  function back() { if (!isFirst) setCurrentStep(s => s - 1) }
+  const spokenText = useMemo(() => {
+    const warning = triageResult.immediateWarning ? `${triageResult.immediateWarning} ` : ''
+    return `${warning}${currentVoiceLine.replaceAll('"', '')}`
+  }, [currentVoiceLine, triageResult.immediateWarning])
+
+  useEffect(() => {
+    if (screen !== 'protocol') return undefined
+    if (!('speechSynthesis' in window) || !spokenText) return undefined
+
+    window.speechSynthesis.cancel()
+    const utterance = new SpeechSynthesisUtterance(spokenText)
+    utterance.rate = 0.95
+    utterance.onstart = () => setIsSpeaking(true)
+    utterance.onend = () => setIsSpeaking(false)
+    utterance.onerror = () => setIsSpeaking(false)
+    window.speechSynthesis.speak(utterance)
+
+    return () => {
+      window.speechSynthesis.cancel()
+      setIsSpeaking(false)
+    }
+  }, [screen, safeStep, spokenText])
+
+  function next() {
+    if (!isLast) setCurrentStep(step => step + 1)
+  }
+
+  function back() {
+    if (!isFirst) setCurrentStep(step => step - 1)
+  }
+
+  function repeatStep() {
+    if (!('speechSynthesis' in window)) {
+      showToast('Speech synthesis is not supported on this browser')
+      return
+    }
+
+    window.speechSynthesis.cancel()
+    const utterance = new SpeechSynthesisUtterance(spokenText)
+    utterance.rate = 0.95
+    utterance.onstart = () => setIsSpeaking(true)
+    utterance.onend = () => setIsSpeaking(false)
+    utterance.onerror = () => setIsSpeaking(false)
+    window.speechSynthesis.speak(utterance)
+  }
+
+  function toggleSpeech() {
+    if (!('speechSynthesis' in window)) {
+      showToast('Speech synthesis is not supported on this browser')
+      return
+    }
+
+    if (window.speechSynthesis.speaking && !window.speechSynthesis.paused) {
+      window.speechSynthesis.pause()
+      setIsSpeaking(false)
+      return
+    }
+
+    if (window.speechSynthesis.paused) {
+      window.speechSynthesis.resume()
+      setIsSpeaking(true)
+      return
+    }
+
+    repeatStep()
+  }
+
+  if (!total) {
+    return (
+      <div className="protocol">
+        <button className="back-nav" onClick={navigateBack}>
+          <ChevronLeft /> Back
+        </button>
+        <div className="proto-header">
+          <div className="injury-tag">Protocol unavailable</div>
+          <h1 className="proto-title">No steps loaded</h1>
+          <p className="proto-subtitle">Return home and try another protocol.</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="protocol">
-
-      {/* Back nav */}
       <button className="back-nav" onClick={navigateBack}>
         <ChevronLeft /> Back
       </button>
 
-      {/* Header */}
       <div className="proto-header">
-        <div className="injury-tag">Deep Laceration · Bleeding</div>
-        <h1 className="proto-title">Bleeding Control<br />Protocol</h1>
-        <p className="proto-subtitle">NDMA certified · Red Cross verified</p>
+        <div className="injury-tag">{triageResult.injuryLabel}</div>
+        <h1 className="proto-title">{selectedProtocol.title}</h1>
+        <p className="proto-subtitle">{selectedProtocol.subtitle}</p>
+        {triageResult.immediateWarning ? (
+          <p className="proto-warning">Warning: {triageResult.immediateWarning}</p>
+        ) : null}
       </div>
 
-      {/* Progress */}
       <div className="proto-progress">
         <div className="progress-labels">
-          <span>STEP {currentStep + 1} OF {total}</span>
+          <span>STEP {safeStep + 1} OF {total}</span>
           <span>{percent}% COMPLETE</span>
         </div>
         <div className="progress-track">
@@ -54,15 +131,12 @@ export default function Protocol() {
         </div>
       </div>
 
-      {/* Steps list */}
       <div className="steps-list">
-        {STEPS.map((step, i) => {
-          const state = i < currentStep ? 'done' : i === currentStep ? 'active' : 'upcoming'
+        {steps.map((step, index) => {
+          const state = index < safeStep ? 'done' : index === safeStep ? 'active' : 'upcoming'
           return (
-            <div key={i} className={`step-card ${state}`}>
-              <div className="step-num">
-                {state === 'done' ? '✓' : i + 1}
-              </div>
+            <div key={step.title} className={`step-card ${state}`}>
+              <div className="step-num">{state === 'done' ? '✓' : index + 1}</div>
               <div>
                 <div className="step-title">{step.title}</div>
                 <div className="step-desc">{step.desc}</div>
@@ -72,31 +146,25 @@ export default function Protocol() {
         })}
       </div>
 
-      {/* Voice bar */}
       <div className="voice-bar">
-        <div className="voice-waves">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="wave-bar" style={{ animationDelay: `${i * 0.07}s` }} />
+        <div className="voice-waves" aria-hidden="true">
+          {[...Array(6)].map((_, index) => (
+            <div key={index} className={`wave-bar ${isSpeaking ? 'active' : ''}`} style={{ animationDelay: `${index * 0.07}s` }} />
           ))}
         </div>
-        <span className="voice-text">{VOICE_LINES[currentStep]}</span>
+        <span className="voice-text">{currentVoiceLine}</span>
         <div className="voice-controls">
-          <button className="v-btn" onClick={() => showToast('Pause — backend coming soon')}>
-            <PauseIcon />
+          <button className="v-btn" onClick={toggleSpeech}>
+            <PauseIcon paused={!isSpeaking} />
           </button>
-          <button className="v-btn" onClick={() => showToast('Repeat — backend coming soon')}>
+          <button className="v-btn" onClick={repeatStep}>
             <RepeatIcon />
           </button>
         </div>
       </div>
 
-      {/* Action buttons */}
       <div className="proto-actions">
-        <button
-          className="btn-secondary"
-          onClick={isFirst ? navigateBack : back}
-          style={{ opacity: isFirst ? 0.4 : 1 }}
-        >
+        <button className="btn-secondary" onClick={isFirst ? navigateBack : back} style={{ opacity: isFirst ? 0.4 : 1 }}>
           ← Back
         </button>
         {isLast ? (
@@ -109,12 +177,10 @@ export default function Protocol() {
           </button>
         )}
       </div>
-
     </div>
   )
 }
 
-// ---- Icons ----
 function ChevronLeft() {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
@@ -123,14 +189,20 @@ function ChevronLeft() {
     </svg>
   )
 }
-function PauseIcon() {
-  return (
+
+function PauseIcon({ paused }) {
+  return paused ? (
+    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M8 5v14l11-7z" />
+    </svg>
+  ) : (
     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
       fill="none" stroke="currentColor" strokeWidth="2.5">
       <rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>
     </svg>
   )
 }
+
 function RepeatIcon() {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"

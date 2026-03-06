@@ -5,7 +5,6 @@
   overflow: hidden;
 }
 
-/* Header */
 .home-header {
   padding: 14px 22px 0;
   display: flex;
@@ -13,6 +12,7 @@
   align-items: center;
   flex-shrink: 0;
 }
+
 .home-brand {
   font-family: var(--font-display);
   font-size: 22px;
@@ -20,9 +20,9 @@
   color: var(--text);
   letter-spacing: -0.02em;
 }
+
 .home-brand span { color: var(--primary); }
 
-/* Hero */
 .home-hero {
   flex: 1;
   display: flex;
@@ -33,6 +33,7 @@
   gap: 18px;
   min-height: 0;
 }
+
 .emergency-btn {
   width: 144px;
   height: 144px;
@@ -53,6 +54,7 @@
     inset 0 2px 4px rgba(255, 255, 255, 0.22);
   transition: transform 0.14s, box-shadow 0.14s;
 }
+
 .emergency-btn::before {
   content: '';
   position: absolute;
@@ -61,6 +63,7 @@
   border: 1px solid rgba(11, 61, 145, 0.24);
   animation: ring-pulse 2.5s infinite;
 }
+
 .emergency-btn::after {
   content: '';
   position: absolute;
@@ -69,10 +72,12 @@
   border: 1px solid rgba(142, 164, 210, 0.14);
   animation: ring-pulse 2.5s infinite 0.6s;
 }
+
 .emergency-btn:active {
   transform: scale(0.94);
   box-shadow: 0 0 0 8px rgba(11,61,145,0.1), 0 10px 28px rgba(11,61,145,0.22);
 }
+
 .btn-label {
   font-family: var(--font-display);
   font-size: 11px;
@@ -81,6 +86,7 @@
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.95);
 }
+
 .home-tagline {
   font-size: 14px;
   color: var(--text-dim);
@@ -88,7 +94,6 @@
   line-height: 1.6;
 }
 
-/* Quick actions */
 .quick-actions {
   padding: 0 20px 10px;
   display: grid;
@@ -96,6 +101,7 @@
   gap: 9px;
   flex-shrink: 0;
 }
+
 .quick-action {
   background: var(--surface2);
   border: 1px solid var(--border);
@@ -106,13 +112,19 @@
   gap: 5px;
   cursor: pointer;
   transition: background 0.14s, transform 0.12s;
+  text-align: left;
 }
+
+button.quick-action {
+  appearance: none;
+  border: 1px solid var(--border);
+}
+
 .quick-action:active { background: var(--surface3); transform: scale(0.97); }
 .qa-icon  { font-size: 20px; }
 .qa-label { font-family: var(--font-display); font-size: 12px; font-weight: 700; color: var(--text); }
 .qa-sub   { font-size: 11px; color: var(--text-dim); }
 
-/* Footer */
 .home-footer {
   padding: 0 22px 28px;
   display: flex;
@@ -120,7 +132,9 @@
   align-items: center;
   flex-shrink: 0;
 }
-.acc-row   { display: flex; gap: 8px; }
+
+.acc-row { display: flex; gap: 8px; }
+
 .acc-btn {
   width: 30px;
   height: 30px;
@@ -132,6 +146,7 @@
   justify-content: center;
   cursor: pointer;
 }
+
 .lang-toggle {
   display: flex;
   background: var(--surface3);
@@ -139,6 +154,7 @@
   padding: 3px;
   gap: 2px;
 }
+
 .lang-btn {
   font-size: 10px;
   font-weight: 700;
@@ -152,4 +168,5 @@
   border: none;
   transition: background 0.2s, color 0.2s;
 }
+
 .lang-btn.active { background: var(--primary); color: white; }

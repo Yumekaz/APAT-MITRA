@@ -1,178 +1,94 @@
 # आपत्·Mitra — Apat-Mitra
 
-**The AI First-Aid Co-Pilot That Works When Everything Else Fails**
+**Offline-first first-aid prototype for fast protocol guidance on mobile**
 
-> A voice-guided, offline-first Progressive Web App that turns any smartphone into an AI triage tool — no app store, no stable internet, no training required.
+Apat-Mitra is a React + Vite PWA prototype designed for emergency bystander support. The current build focuses on a believable end-to-end flow that can be demonstrated on a phone: choose or capture an injury photo, route to a first-aid protocol, hear spoken steps, and open an SMS draft for 112 with the current protocol state.
 
----
+## What This Prototype Does
 
-## The Problem
+- Opens as a mobile-friendly PWA shell
+- Loads bundled protocol JSON files for bleeding, burns, CPR, and fractures
+- Lets the user capture or upload an injury photo on supported devices
+- Shows a Gemini-style prototype triage badge and routes with local prototype rules plus manual override
+- Supports manual protocol override before opening guidance
+- Uses browser SpeechSynthesis for spoken step playback when available
+- Uses browser geolocation to add coordinates to the SOS message when permission is granted
+- Opens the phone's SMS composer with a prefilled 112 message
+- Caches the app shell and protocol JSON files for repeat use offline after first load
 
-In disaster-prone Uttarakhand, ambulances take 18–20+ minutes to reach hilly terrain in normal conditions. During floods or landslides, roads wash out and towers go down entirely. The only person who can save a trauma victim in that window is an untrained bystander — who has no idea what to do.
+## What Is Still Mocked Or Limited
 
-Existing apps require stable internet, app store downloads, and complex navigation. All impossible during active emergencies.
+- There is no live Gemini or backend inference in this repo today
+- Photo analysis uses local prototype rules and manual fallback, not medical AI
+- Voice recognition is not implemented
+- SMS sending still depends on the device's native SMS app
+- Offline use is strongest after the first successful load and cache fill
 
-**1.68 lakh+ Indians die from trauma injuries yearly. Nearly half are preventable with correct bystander first aid.** _(NCRB 2022)_
+## Screens
 
----
-
-## The Solution
-
-Apat-Mitra is a PWA that:
-
-- **Opens via QR code** — no install, no app store, loads in 3 seconds on a ₹6,000 phone
-- **Scans the injury** — Gemini 2.5 Flash Vision classifies wound type and routes to the correct protocol automatically
-- **Reads steps aloud** — SpeechSynthesis API delivers Hindi + English voice guidance, fully offline after first load
-- **Falls back silently** — if AI confidence is below 75% or network is unavailable, the app switches to certified NDMA offline protocols without showing any error
-- **Sends SOS in one tap** — pre-composed SMS to 112 with live GPS coordinates and injury summary
-
----
-
-## Live Demo
-
-> **[Link to deployed app — Cloudflare Pages]**  
-> Scan QR or open on mobile for best experience.
-
----
-
-## Screenshots
-
-| Home                               | AI Triage                              | Voice Protocol                             | SOS                              |
-| ---------------------------------- | -------------------------------------- | ------------------------------------------ | -------------------------------- |
+| Home | Triage | Protocol | SOS |
+| --- | --- | --- | --- |
 | ![Home](docs/screenshots/home.png) | ![AI Triage](docs/screenshots/ai-triage.png) | ![Voice Protocol](docs/screenshots/voice-protocol.png) | ![SOS](docs/screenshots/sos.png) |
-
----
 
 ## Tech Stack
 
-| Layer          | Technology                                            |
-| -------------- | ----------------------------------------------------- |
-| Frontend       | React + Vite                                          |
-| Styling        | Tailwind CSS (purged)                                 |
-| Offline assets | Service Worker + Cache API                            |
-| Offline data   | Protocol JSONs (NDMA certified)                       |
-| AI triage      | Gemini 2.5 Flash Vision (via Cloudflare Worker proxy) |
-| Voice output   | Web SpeechSynthesis API (offline)                     |
-| Voice input    | Web SpeechRecognition (online enhancement)            |
-| Location       | navigator.geolocation                                 |
-| SOS            | sms: URI scheme → pre-filled 112                      |
-| Hosting        | Cloudflare Pages                                      |
-
-**No backend. No database. No server.**
-
----
-
-## Offline Architecture
-
-The app uses a **cache-first Service Worker** strategy:
-
-1. On first load, all app assets + protocol JSONs are cached
-2. Every subsequent load — even with zero internet — serves from cache
-3. When network returns, cache updates silently in the background
-
-This means a flood victim in Chamoli with no signal still gets full protocol guidance.
-
----
-
-## Protocol Library
-
-Stored as versioned JSON in `/public/protocols/`:
-
-| Protocol        | Source                | Status      |
-| --------------- | --------------------- | ----------- |
-| `bleeding.json` | NDMA 2024 + Red Cross | ✅ Complete |
-| `burns.json`    | NDMA Guidelines       | ✅ Complete |
-| `cpr.json`      | AHA Guidelines        | ✅ Complete |
-| `fracture.json` | NDMA + WHO            | ✅ Complete |
-
-Each protocol includes bilingual voice lines for SpeechSynthesis playback.
-
----
+- React 18
+- Vite 4
+- Plain CSS
+- Service Worker + Cache API
+- IndexedDB for local protocol copies
+- Web Speech API for spoken guidance
+- `navigator.geolocation` for SOS location
+- `sms:` URI composition for emergency messages
 
 ## Project Structure
 
-```
-apat-mitra/
+```text
+APAT-MITRA/
 ├── public/
-│   ├── manifest.json          ← PWA manifest
-│   ├── sw.js                  ← Service Worker (offline caching)
+│   ├── icon.svg
+│   ├── manifest.json
+│   ├── sw.js
 │   └── protocols/
-│       ├── bleeding.json      ← Bleeding control (NDMA)
-│       ├── burns.json         ← Burn protocol (NDMA)
-│       ├── cpr.json           ← CPR (AHA)
-│       └── fracture.json      ← Fracture/immobilization (NDMA+WHO)
+│       ├── bleeding.json
+│       ├── burns.json
+│       ├── cpr.json
+│       └── fracture.json
 ├── src/
-│   ├── context/
-│   │   └── AppContext.jsx     ← Global state (navigation, step, camera)
 │   ├── components/
-│   │   ├── PhoneShell.jsx     ← App shell + screen switcher
-│   │   └── Toast.jsx          ← Notification system
+│   ├── context/
 │   ├── screens/
-│   │   ├── Home.jsx           ← Landing + quick actions
-│   │   ├── Camera.jsx         ← AI triage camera (Gemini integration)
-│   │   ├── Protocol.jsx       ← Step-by-step voice protocol
-│   │   └── SOS.jsx            ← GPS + pre-filled SMS to 112
-│   └── styles/
-│       └── global.css         ← CSS variables + reset
-└── gemini-prompts.js          ← Structured Gemini prompt templates
+│   ├── styles/
+│   ├── App.jsx
+│   ├── main.jsx
+│   └── pwaInit.js
+└── README.md
 ```
-
----
 
 ## Getting Started
 
 ```bash
-# 1. Clone the repo
-git clone https://github.com/Yumekaz/APAT-MITRA.git
-cd APAT-MITRA
-
-# 2. Install dependencies
 npm install
-
-# 3. Start dev server
 npm run dev
-
-# 4. Open on mobile (or DevTools mobile view)
-# → http://localhost:5173
 ```
 
----
+For the best demo:
 
-## Future Development Roadmap
+1. Open the app on a phone or in responsive device mode.
+2. Visit the camera screen and capture or upload a sample image.
+3. Open a protocol and verify spoken playback.
+4. Visit SOS and allow location access.
+5. Tap the SMS button to open the prefilled 112 draft.
 
-Planned enhancements beyond the current prototype:
+## Build
 
-- Gemini 2.5 Flash Vision API integration with confidence gate fallback
-- Real-time SpeechSynthesis voice protocol in Hindi + English
-- Live GPS fetch + direct SMS dispatch to 112 on Android
-- Full offline validation on budget ₹6,000 Android hardware
-- Cloudflare Worker proxy for secure API key management
+```bash
+npm run build
+```
 
----
+## Next Steps
 
-## Team — Codeinit
-
-| Name               | Role                                  |
-| ------------------ | ------------------------------------- |
-| **Mihir Swarnkar** | Systems Architecture & AI Integration |
-| **Taniya Taragi**  | Frontend Engineering & UI/UX          |
-| **Tarun Pathak**   | Gemini API & Offline Systems          |
-| **Diksha Kunwar**  | Protocol Research & Testing           |
-
-**Graphic Era Hill University · Uttarakhand**  
-**Graph-E-Thon 3.0 · Track 1: Intelligent Health & Learning · SDG 3 + SDG 4**
-
----
-
-## References
-
-1. NCRB Annual Report (2022) — 1.68 lakh trauma fatalities in India
-2. ICIMOD — Chamoli Flood Report, May 2021 (200+ deaths/missing)
-3. NHM Uttarakhand (2026) — 12,018 ASHA workers in Uttarakhand
-4. WHO Health Emergencies Programme (2022) — Golden hour in trauma
-5. AHA Guidelines — CPR and Emergency Cardiovascular Care
-
----
-
-_"Rapid clinical care within 60 minutes of traumatic injury is key to a good outcome."_  
-— WHO Health Emergencies Programme
+- Replace local photo routing with a real vision API or on-device model
+- Add multilingual protocol content instead of only UI language toggles
+- Add explicit offline health indicators and cache status
+- Add test coverage for protocol loading, voice controls, and SOS composition
