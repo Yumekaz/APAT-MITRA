@@ -1,0 +1,34 @@
+{
+    "title": "CPR Protocol",
+    "subtitle": "AHA Guidelines · Certified",
+    "tag": "Cardiac Arrest",
+    "steps": [
+        {
+            "title": "Call 112",
+            "desc": "Call emergency services immediately and get an AED if available."
+        },
+        {
+            "title": "Check Breathing",
+            "desc": "Look, listen, and feel for normal breathing."
+        },
+        {
+            "title": "Chest Compressions",
+            "desc": "Push hard and fast in the center of the chest. 30 compressions."
+        },
+        {
+            "title": "Rescue Breaths",
+            "desc": "Give 2 rescue breaths if trained."
+        },
+        {
+            "title": "Repeat",
+            "desc": "Continue CPR until help arrives or patient breathes normally."
+        }
+    ],
+    "voice_lines": [
+        "\"Call emergency services now...\"",
+        "\"Check for breathing...\"",
+        "\"Start pushing hard and fast...\"",
+        "\"Give two breaths...\"",
+        "\"Keep going until help arrives...\""
+    ]
+}

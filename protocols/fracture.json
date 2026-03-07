@@ -1,0 +1,40 @@
+{
+  "title": "Fracture & Immobilization Protocol",
+  "subtitle": "NDMA guidelines · WHO verified",
+  "tag": "Suspected Fracture · Bone Injury",
+  "steps": [
+    {
+      "title": "Do not move the victim",
+      "desc": "Keep the patient still. Do not attempt to straighten or realign the injured limb. Movement can cause further injury or internal bleeding.",
+      "warning": true
+    },
+    {
+      "title": "Call 112 immediately",
+      "desc": "Fractures — especially of the spine, pelvis, or femur — can be life-threatening. Call emergency services before doing anything else."
+    },
+    {
+      "title": "Control any bleeding",
+      "desc": "If there is an open wound near the fracture, apply gentle pressure with a clean cloth. Do not press directly on a protruding bone."
+    },
+    {
+      "title": "Immobilize the injury",
+      "desc": "Use whatever is available — a folded cloth, board, or rolled newspaper — as a splint. Pad it for comfort and tie it above and below the injury, not over it."
+    },
+    {
+      "title": "Apply ice if available",
+      "desc": "Wrap ice or a cold pack in cloth and apply to the injury for up to 20 minutes to reduce swelling. Never apply ice directly to skin."
+    },
+    {
+      "title": "Treat for shock",
+      "desc": "Keep the patient warm and lying down. Elevate the legs slightly unless the head, neck, or back is injured. Do not give food or water. Stay with them until help arrives."
+    }
+  ],
+  "voice_lines": [
+    "Do not move the patient. Keep them completely still.",
+    "Call 112 now. This is a priority emergency.",
+    "If there is bleeding, press a clean cloth gently on the wound.",
+    "Immobilize the limb with a splint above and below the injury.",
+    "Apply wrapped ice to reduce swelling if available.",
+    "Keep the patient warm and calm. Stay with them until help arrives."
+  ]
+}
