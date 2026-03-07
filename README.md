@@ -1,6 +1,6 @@
 # आपत्·Mitra — Apat-Mitra
 
-**Offline-first first-aid prototype for fast protocol guidance on mobile**
+**Offline-first first-aid prototype for fast protocol guidance on mobile.** *Built for Graph-e-thon 3.0 (Track 1: Intelligent Health & Learning)*
 
 Apat-Mitra is a React + Vite PWA prototype designed for emergency bystander support. The current build focuses on a believable end-to-end flow that can be demonstrated on a phone: choose or capture an injury photo, route to a first-aid protocol, hear spoken steps, and open an SMS draft for 112 with the current protocol state.
 

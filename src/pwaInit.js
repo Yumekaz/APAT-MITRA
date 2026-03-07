@@ -1,6 +1,7 @@
 const DB_NAME = 'apatMitraDB'
 const STORE_NAME = 'protocols'
 const PROTOCOL_IDS = ['bleeding', 'burns', 'cpr', 'fracture']
+const BASE = import.meta.env.BASE_URL
 
 function initDB() {
   return new Promise((resolve, reject) => {
@@ -23,7 +24,7 @@ async function syncProtocols() {
     const db = await initDB()
 
     for (const protocolId of PROTOCOL_IDS) {
-      const response = await fetch(`/protocols/${protocolId}.json`)
+      const response = await fetch(`${BASE}protocols/${protocolId}.json`)
       if (!response.ok) continue
       const data = await response.json()
       const tx = db.transaction(STORE_NAME, 'readwrite')
@@ -38,7 +39,7 @@ export function registerPWA() {
   if (!('serviceWorker' in navigator)) return
 
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
+    navigator.serviceWorker.register(`${BASE}sw.js`)
       .then(() => {
         if ('indexedDB' in window) {
           syncProtocols()
@@ -49,3 +50,4 @@ export function registerPWA() {
       })
   })
 }
+

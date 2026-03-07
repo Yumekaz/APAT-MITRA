@@ -3,7 +3,7 @@
   "name": "Apat-Mitra Emergency First Aid Prototype",
   "icons": [
     {
-      "src": "/icon.svg",
+      "src": "icon.svg",
       "type": "image/svg+xml",
       "sizes": "any"
     }

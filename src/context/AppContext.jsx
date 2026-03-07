@@ -55,7 +55,7 @@ export function AppProvider({ children }) {
       try {
         const entries = await Promise.all(
           PROTOCOL_IDS.map(async (id) => {
-            const response = await fetch(`/protocols/${id}.json`)
+            const response = await fetch(`${import.meta.env.BASE_URL}protocols/${id}.json`)
             if (!response.ok) {
               throw new Error(`Failed to load ${id}`)
             }

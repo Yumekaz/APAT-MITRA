@@ -471,3 +471,36 @@ body {
     opacity: 1;
   }
 }
+
+/* ===== REAL-MOBILE FULLSCREEN ===== */
+/* On real phones, drop the phone frame and fill the screen */
+@media (max-width: 430px) {
+  body {
+    padding: 0;
+    background: var(--bg);
+    overflow: auto;
+  }
+
+  .phone-shell {
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh; /* dynamic viewport height for mobile address bars */
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .dynamic-island {
+    display: none;
+  }
+
+  .status-bar {
+    padding-top: calc(14px + env(safe-area-inset-top, 0px));
+  }
+
+  .proto-actions,
+  .sos-cta,
+  .cam-bottom,
+  .home-footer {
+    padding-bottom: calc(28px + env(safe-area-inset-bottom, 0px));
+  }
+}

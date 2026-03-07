@@ -1,18 +1,22 @@
-const CACHE_NAME = 'apat-mitra-v2'
+const CACHE_NAME = 'apat-mitra-v3'
+const BASE = self.registration.scope
+
 const ASSETS_TO_CACHE = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/icon.svg',
-  '/protocols/bleeding.json',
-  '/protocols/burns.json',
-  '/protocols/cpr.json',
-  '/protocols/fracture.json',
+  '',
+  'index.html',
+  'manifest.json',
+  'icon.svg',
+  'protocols/bleeding.json',
+  'protocols/burns.json',
+  'protocols/cpr.json',
+  'protocols/fracture.json',
 ]
 
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS_TO_CACHE))
+    caches.open(CACHE_NAME).then(cache =>
+      cache.addAll(ASSETS_TO_CACHE.map(path => new URL(path, BASE).href))
+    )
   )
   self.skipWaiting()
 })
@@ -53,7 +57,7 @@ self.addEventListener('fetch', event => {
         })
         .catch(() => {
           if (event.request.mode === 'navigate') {
-            return caches.match('/index.html')
+            return caches.match(new URL('index.html', BASE).href)
           }
           return new Response('Offline', { status: 503, statusText: 'Offline' })
         })
