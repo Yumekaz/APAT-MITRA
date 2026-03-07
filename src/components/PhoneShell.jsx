@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useApp } from '../context/AppContext'
-import Home     from '../screens/Home'
-import Camera   from '../screens/Camera'
+import Home from '../screens/Home'
+import Camera from '../screens/Camera'
 import Protocol from '../screens/Protocol'
-import SOS      from '../screens/SOS'
-import Toast    from './Toast'
+import SOS from '../screens/SOS'
+import Toast from './Toast'
 
 // Which screens exist and their render order
 const SCREENS = ['home', 'camera', 'protocol', 'sos']
@@ -16,7 +16,7 @@ export default function PhoneShell() {
     if (typeof window === 'undefined') return 'light'
     const saved = window.localStorage.getItem('theme')
     if (saved === 'light' || saved === 'dark') return saved
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+    return 'light'
   })
 
   // Live clock
