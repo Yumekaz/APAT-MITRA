@@ -127,29 +127,16 @@ export default function SOS() {
   }
 
   async function handleSend() {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: 'Apat-Mitra SOS Alert',
-          text: message,
-        })
-        showToast('Shared the emergency alert with live GPS details')
-        return
-      } catch (error) {
-        if (error?.name === 'AbortError') {
-          return
-        }
-      }
-    }
-
+    // Copy message to clipboard as backup
     if (navigator.clipboard?.writeText) {
       try {
         await navigator.clipboard.writeText(message)
       } catch {
-        // Clipboard access is optional; keep the SMS fallback path.
+        // Clipboard access is optional
       }
     }
 
+    // Open SMS composer directly to 112
     window.location.href = buildSmsHref(message)
     showToast('Opened SMS composer with the GPS alert text')
   }
