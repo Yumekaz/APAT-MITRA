@@ -30,11 +30,11 @@
     }
   ],
   "voice_lines": [
-    "रोगी को बिल्कुल मत हिलाइए।",
-    "तुरंत एक सौ बारह पर कॉल कीजिए।",
-    "खून बह रहा हो तो साफ कपड़े से हल्का दबाव दीजिए।",
-    "चोट वाले हिस्से को स्प्लिंट से स्थिर कीजिए।",
-    "कपड़े में लपेटी बर्फ से सूजन कम कीजिए।",
-    "रोगी को गर्म और शांत रखिए, मदद आने तक साथ रहिए।"
+    "Do not move the patient. Keep them completely still.",
+    "Call 112 now. This is a priority emergency.",
+    "If there is bleeding, press a clean cloth gently on the wound.",
+    "Immobilize the limb with a splint above and below the injury.",
+    "Apply wrapped ice to reduce swelling if available.",
+    "Keep the patient warm and calm. Stay with them until help arrives."
   ]
 }

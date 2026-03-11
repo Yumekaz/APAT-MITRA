@@ -25,10 +25,10 @@
         }
     ],
     "voice_lines": [
-        "जली हुई जगह को ठंडे पानी के नीचे रखिए।",
-        "कसे हुए गहने या कपड़े हटा दीजिए।",
-        "फफोलों को मत फोड़िए।",
-        "ठंडा होने के बाद जलन जेल लगाइए।",
-        "स्टेराइल पट्टी ढीली बांधिए।"
+        "\"Hold area under cool water...\"",
+        "\"Remove any tight jewelry...\"",
+        "\"Do not pop any blisters...\"",
+        "\"Apply a soothing gel...\"",
+        "\"Cover loosely with sterile bandage...\""
     ]
 }

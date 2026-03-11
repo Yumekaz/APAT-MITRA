@@ -3,7 +3,7 @@ import { useApp } from '../context/AppContext'
 import './SOS.css'
 
 export default function SOS() {
-  const { navigateBack, showToast, currentStep, selectedProtocol, triageResult, location, setLocation } = useApp()
+  const { navigateBack, showToast, currentStep, selectedProtocol, triageResult, location, setLocation, screen } = useApp()
   const [elapsed, setElapsed] = useState(0)
 
   useEffect(() => {
@@ -11,12 +11,23 @@ export default function SOS() {
     return () => clearInterval(id)
   }, [])
 
-  useEffect(() => {
-    if (!('geolocation' in navigator) || location.status !== 'idle') {
+  function requestLocation() {
+    if (!('geolocation' in navigator)) {
+      setLocation({
+        status: 'unsupported',
+        coords: null,
+        updatedAt: null,
+        error: 'Geolocation is not supported on this browser',
+      })
       return
     }
 
-    setLocation(prev => ({ ...prev, status: 'loading', error: '' }))
+    setLocation(prev => ({
+      ...prev,
+      status: 'loading',
+      error: '',
+    }))
+
     navigator.geolocation.getCurrentPosition(
       position => {
         setLocation({
@@ -39,7 +50,19 @@ export default function SOS() {
       },
       { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
     )
-  }, [location.status, setLocation])
+  }
+
+  useEffect(() => {
+    if (screen !== 'sos') {
+      return
+    }
+
+    if (location.status === 'ready' || location.status === 'loading') {
+      return
+    }
+
+    requestLocation()
+  }, [location.status, screen])
 
   const mins = String(Math.floor(elapsed / 60)).padStart(2, '0')
   const secs = String(elapsed % 60).padStart(2, '0')
@@ -47,7 +70,21 @@ export default function SOS() {
     ? `Lat: ${location.coords.latitude.toFixed(5)} · Long: ${location.coords.longitude.toFixed(5)}`
     : location.status === 'loading'
       ? 'Fetching location...'
-      : 'Location unavailable'
+      : location.status === 'unsupported'
+        ? 'Geolocation not supported'
+        : 'Location unavailable'
+
+  const gpsStatus = location.status === 'ready'
+    ? 'Active'
+    : location.status === 'loading'
+      ? 'Searching'
+      : location.status === 'unsupported'
+        ? 'Unsupported'
+        : 'Unavailable'
+
+  const mapsLink = location.coords
+    ? `https://maps.google.com/?q=${location.coords.latitude.toFixed(6)},${location.coords.longitude.toFixed(6)}`
+    : ''
 
   const message = useMemo(() => {
     const parts = [
@@ -59,17 +96,45 @@ export default function SOS() {
 
     if (location.coords) {
       parts.push(`Location: ${location.coords.latitude.toFixed(5)}, ${location.coords.longitude.toFixed(5)}.`)
+      parts.push(`Map: ${mapsLink}.`)
     } else if (location.error) {
       parts.push(`Location unavailable: ${location.error}.`)
     }
 
     return parts.join(' ')
-  }, [currentStep, location.coords, location.error, selectedProtocol.steps.length, selectedProtocol.title, triageResult.injuryLabel, triageResult.summary])
+  }, [currentStep, location.coords, location.error, mapsLink, selectedProtocol.steps.length, selectedProtocol.title, triageResult.injuryLabel, triageResult.summary])
 
-  function handleSend() {
-    const href = `sms:112?body=${encodeURIComponent(message)}`
-    window.location.href = href
-    showToast('Opened SMS composer with the emergency message')
+  function buildSmsHref(body) {
+    const separator = /iphone|ipad|ipod/i.test(window.navigator.userAgent) ? '&' : '?'
+    return `sms:112${separator}body=${encodeURIComponent(body)}`
+  }
+
+  async function handleSend() {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Apat-Mitra SOS Alert',
+          text: message,
+        })
+        showToast('Shared the emergency alert with live GPS details')
+        return
+      } catch (error) {
+        if (error?.name === 'AbortError') {
+          return
+        }
+      }
+    }
+
+    if (navigator.clipboard?.writeText) {
+      try {
+        await navigator.clipboard.writeText(message)
+      } catch {
+        // Clipboard access is optional; keep the SMS fallback path.
+      }
+    }
+
+    window.location.href = buildSmsHref(message)
+    showToast('Opened SMS composer with the GPS alert text')
   }
 
   return (
@@ -97,6 +162,7 @@ export default function SOS() {
           <Field label="Message">{message}</Field>
           <Field label="GPS Location">
             <span className="coords">{coordsText}</span>
+            {location.error ? <span className="coords-error">{location.error}</span> : null}
           </Field>
           <Field label="Protocol Status">
             {selectedProtocol.title} · Step {Math.min(currentStep + 1, selectedProtocol.steps.length)}/{selectedProtocol.steps.length}
@@ -106,14 +172,19 @@ export default function SOS() {
 
       <div className="sos-info-grid">
         <InfoCard label="Injury Type" value={triageResult.protocolId.toUpperCase()} valueClass="danger" />
-        <InfoCard label="GPS Lock" value={location.status === 'ready' ? 'Active' : location.status === 'loading' ? 'Searching' : 'Unavailable'} valueClass={location.status === 'ready' ? 'good' : 'amber'} />
-        <InfoCard label="Network" value="SMS Composer" valueClass="amber" />
+        <InfoCard label="GPS Lock" value={gpsStatus} valueClass={location.status === 'ready' ? 'good' : 'amber'} />
+        <InfoCard label="Network" value="Share / SMS" valueClass="amber" />
         <InfoCard label="Time Elapsed" value={`${mins}:${secs}`} />
       </div>
 
       <div className="sos-cta">
+        {location.status !== 'ready' ? (
+          <button className="sos-retry-btn" onClick={requestLocation} disabled={location.status === 'loading'}>
+            {location.status === 'loading' ? 'Fetching GPS...' : 'Retry GPS'}
+          </button>
+        ) : null}
         <button className="sos-send-btn" onClick={handleSend}>
-          📤 Open SMS Composer
+          📤 Send SOS Alert
         </button>
         <button className="sos-cancel" onClick={navigateBack}>
           Return to protocol

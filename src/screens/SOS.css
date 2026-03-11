@@ -93,6 +93,12 @@
   background: var(--surface3); padding: 3px 7px;
   border-radius: 6px; border: 1px solid var(--border);
 }
+.coords-error {
+  display: block;
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--amber);
+}
 
 .sos-info-grid {
   padding: 0 18px 8px;
@@ -122,6 +128,24 @@
   padding: 8px 22px 32px;
   display: flex; flex-direction: column; gap: 10px;
   flex-shrink: 0;
+}
+.sos-retry-btn {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.sos-retry-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
 }
 .sos-send-btn {
   width: 100%; padding: 16px;

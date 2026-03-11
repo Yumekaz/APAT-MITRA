@@ -47,7 +47,7 @@ export default function Home() {
 
       <div className="home-footer">
         <div className="acc-row">
-          <button className="acc-btn" onClick={() => showToast('Voice guidance follows the phone language when available')}>
+          <button className="acc-btn" onClick={() => showToast('Hindi voice guidance uses your device Hindi voice when available')}>
             <GlobeIcon />
           </button>
           <button className="acc-btn" onClick={() => showToast('Large-text mode is still a planned improvement')}>

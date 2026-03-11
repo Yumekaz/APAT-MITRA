@@ -25,10 +25,10 @@
         }
     ],
     "voice_lines": [
-        "तुरंत एक सौ बारह पर कॉल कीजिए।",
-        "सांस चल रही है या नहीं, जांच कीजिए।",
-        "छाती के बीचों-बीच तेज और मजबूत दबाव दीजिए।",
-        "यदि प्रशिक्षित हैं, तो दो रेस्क्यू सांस दीजिए।",
-        "मदद आने तक सीपीआर जारी रखिए।"
+        "\"Call emergency services now...\"",
+        "\"Check for breathing...\"",
+        "\"Start pushing hard and fast...\"",
+        "\"Give two breaths...\"",
+        "\"Keep going until help arrives...\""
     ]
 }

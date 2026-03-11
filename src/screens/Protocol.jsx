@@ -2,6 +2,10 @@ import { useEffect, useMemo, useState } from 'react'
 import { useApp } from '../context/AppContext'
 import './Protocol.css'
 
+const WARNING_TRANSLATIONS = {
+  'Do not move the injured limb.': 'घायल अंग को बिल्कुल मत हिलाइए।',
+}
+
 export default function Protocol() {
   const {
     navigateTo,
@@ -14,6 +18,7 @@ export default function Protocol() {
     screen,
   } = useApp()
   const [isSpeaking, setIsSpeaking] = useState(false)
+  const [preferredVoice, setPreferredVoice] = useState(null)
 
   const steps = selectedProtocol.steps ?? []
   const voiceLines = selectedProtocol.voice_lines ?? []
@@ -23,29 +28,58 @@ export default function Protocol() {
   const isLast = safeStep === total - 1
   const isFirst = safeStep === 0
   const currentVoiceLine = voiceLines[safeStep] ?? steps[safeStep]?.desc ?? 'Follow the protocol carefully.'
+  const spokenWarning = WARNING_TRANSLATIONS[triageResult.immediateWarning] ?? triageResult.immediateWarning
 
   const spokenText = useMemo(() => {
-    const warning = triageResult.immediateWarning ? `${triageResult.immediateWarning} ` : ''
+    const warning = spokenWarning ? `${spokenWarning} ` : ''
     return `${warning}${currentVoiceLine.replaceAll('"', '')}`
-  }, [currentVoiceLine, triageResult.immediateWarning])
+  }, [currentVoiceLine, spokenWarning])
 
   useEffect(() => {
-    if (screen !== 'protocol') return undefined
-    if (!('speechSynthesis' in window) || !spokenText) return undefined
+    if (!('speechSynthesis' in window)) return undefined
 
+    const updateVoices = () => {
+      const voices = window.speechSynthesis.getVoices()
+      const hindiVoice = voices.find(voice => voice.lang?.toLowerCase() === 'hi-in')
+        ?? voices.find(voice => voice.lang?.toLowerCase().startsWith('hi'))
+        ?? null
+
+      setPreferredVoice(hindiVoice)
+    }
+
+    updateVoices()
+    window.speechSynthesis.addEventListener('voiceschanged', updateVoices)
+
+    return () => {
+      window.speechSynthesis.removeEventListener('voiceschanged', updateVoices)
+    }
+  }, [])
+
+  function speakLine() {
     window.speechSynthesis.cancel()
     const utterance = new SpeechSynthesisUtterance(spokenText)
+    utterance.lang = preferredVoice?.lang ?? 'hi-IN'
+    if (preferredVoice) {
+      utterance.voice = preferredVoice
+    }
     utterance.rate = 0.95
     utterance.onstart = () => setIsSpeaking(true)
     utterance.onend = () => setIsSpeaking(false)
     utterance.onerror = () => setIsSpeaking(false)
     window.speechSynthesis.speak(utterance)
+  }
+
+  useEffect(() => {
+    if (screen !== 'protocol') return undefined
+    if (!('speechSynthesis' in window) || !spokenText) return undefined
+
+    speakLine()
 
     return () => {
       window.speechSynthesis.cancel()
       setIsSpeaking(false)
     }
-  }, [screen, safeStep, spokenText])
+  }, [preferredVoice, screen, safeStep, spokenText])
 
   function next() {
     if (!isLast) setCurrentStep(step => step + 1)
@@ -61,13 +95,7 @@ export default function Protocol() {
       return
     }
 
-    window.speechSynthesis.cancel()
-    const utterance = new SpeechSynthesisUtterance(spokenText)
-    utterance.rate = 0.95
-    utterance.onstart = () => setIsSpeaking(true)
-    utterance.onend = () => setIsSpeaking(false)
-    utterance.onerror = () => setIsSpeaking(false)
-    window.speechSynthesis.speak(utterance)
+    speakLine()
   }
 
   function toggleSpeech() {

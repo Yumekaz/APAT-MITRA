@@ -1,6 +1,5 @@
-const CACHE_NAME = 'apat-mitra-v4'
+const CACHE_NAME = 'apat-mitra-v3'
 const BASE = self.registration.scope
-const ORIGIN = self.location.origin
 
 const ASSETS_TO_CACHE = [
   '',
@@ -13,47 +12,11 @@ const ASSETS_TO_CACHE = [
   'protocols/fracture.json',
 ]
 
-async function cacheRequest(cache, url) {
-  try {
-    const response = await fetch(url, { cache: 'no-cache' })
-    if (response.ok) {
-      await cache.put(url, response)
-    }
-  } catch {
-    return null
-  }
-  return null
-}
-
-async function discoverShellAssets() {
-  const indexUrl = new URL('index.html', BASE).href
-
-  try {
-    const response = await fetch(indexUrl, { cache: 'no-cache' })
-    if (!response.ok) return []
-
-    const html = await response.text()
-    const assets = Array.from(html.matchAll(/(?:href|src)=["']([^"']+)["']/g), match => match[1])
-      .map(path => new URL(path, BASE).href)
-      .filter(url => url.startsWith(ORIGIN))
-
-    return [...new Set([new URL('', BASE).href, indexUrl, ...assets])]
-  } catch {
-    return [new URL('', BASE).href, indexUrl]
-  }
-}
-
 self.addEventListener('install', event => {
   event.waitUntil(
-    (async () => {
-      const cache = await caches.open(CACHE_NAME)
-      const coreUrls = ASSETS_TO_CACHE.map(path => new URL(path, BASE).href)
-      const shellUrls = await discoverShellAssets()
-
-      for (const url of [...new Set([...coreUrls, ...shellUrls])]) {
-        await cacheRequest(cache, url)
-      }
-    })()
+    caches.open(CACHE_NAME).then(cache =>
+      cache.addAll(ASSETS_TO_CACHE.map(path => new URL(path, BASE).href))
+    )
   )
   self.skipWaiting()
 })

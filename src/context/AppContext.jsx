@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { loadProtocolsFromStore } from '../protocolStore'
 
 const AppContext = createContext(null)
 const PROTOCOL_IDS = ['bleeding', 'burns', 'cpr', 'fracture']
@@ -15,11 +16,11 @@ const FALLBACK_PROTOCOL = {
     { title: 'Wait for help', desc: 'Keep the patient calm and still. Do not move them unless unsafe.' },
   ],
   voice_lines: [
-    '"Alert nearby people immediately..."',
-    '"Press clean cloth on wound firmly..."',
-    '"Raise the limb above heart level..."',
-    '"Check breathing every 2 minutes..."',
-    '"Keep the patient calm and still..."',
+    'पास के लोगों को तुरंत मदद के लिए बुलाइए।',
+    'घाव पर साफ कपड़े से जोर से दबाव डालिए।',
+    'घायल अंग को दिल से ऊपर उठाइए।',
+    'हर दो मिनट में सांस की जांच कीजिए।',
+    'रोगी को शांत और स्थिर रखिए।',
   ],
 }
 
@@ -52,6 +53,17 @@ export function AppProvider({ children }) {
     let ignore = false
 
     async function loadProtocols() {
+      if ('indexedDB' in window) {
+        try {
+          const storedProtocols = await loadProtocolsFromStore()
+          if (!ignore && Object.keys(storedProtocols).length) {
+            setProtocolLibrary(prev => ({ ...prev, ...storedProtocols }))
+          }
+        } catch (error) {
+          console.warn('Stored protocol load skipped', error)
+        }
+      }
+
       try {
         const entries = await Promise.all(
           PROTOCOL_IDS.map(async (id) => {
@@ -68,7 +80,7 @@ export function AppProvider({ children }) {
           setProtocolLibrary(Object.fromEntries(entries))
         }
       } catch (error) {
-        console.warn('Falling back to bundled protocol defaults', error)
+        console.warn('Falling back to cached or bundled protocol defaults', error)
       }
     }
 
