@@ -25,10 +25,10 @@
         }
     ],
     "voice_lines": [
-        "\"Alert nearby people immediately...\"",
-        "\"Press clean cloth on wound firmly...\"",
-        "\"Raise the limb above heart level...\"",
-        "\"Check breathing every 2 minutes...\"",
-        "\"Keep the patient calm and still...\""
+        "पास के लोगों को तुरंत मदद के लिए बुलाइए।",
+        "घाव पर साफ कपड़े से जोर से दबाव डालिए।",
+        "घायल अंग को दिल से ऊपर उठाइए।",
+        "हर दो मिनट में सांस की जांच कीजिए।",
+        "रोगी को शांत और स्थिर रखिए।"
     ]
 }
