@@ -28,6 +28,7 @@ export default function SOS() {
       error: '',
     }))
 
+    // Phase 1 — fast coarse location (WiFi / cell tower, ~1-2s)
     navigator.geolocation.getCurrentPosition(
       position => {
         setLocation({
@@ -39,6 +40,22 @@ export default function SOS() {
           updatedAt: Date.now(),
           error: '',
         })
+        // Phase 2 — silently upgrade to precise GPS in background
+        navigator.geolocation.getCurrentPosition(
+          precise => {
+            setLocation({
+              status: 'ready',
+              coords: {
+                latitude: precise.coords.latitude,
+                longitude: precise.coords.longitude,
+              },
+              updatedAt: Date.now(),
+              error: '',
+            })
+          },
+          () => {},
+          { enableHighAccuracy: true, timeout: 6000, maximumAge: 0 }
+        )
       },
       error => {
         setLocation({
@@ -48,7 +65,7 @@ export default function SOS() {
           error: error.message || 'Location unavailable',
         })
       },
-      { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
+      { enableHighAccuracy: false, timeout: 3000, maximumAge: 60000 }
     )
   }
 
